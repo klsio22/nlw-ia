@@ -5,25 +5,26 @@ import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import { pipeline } from "node:stream";
 import fs from "node:fs";
+import { prisma } from "../lib/prisma";
 
 const pump = promisify(pipeline);
 
 export async function uploadVideoRoute(app: FastifyInstance) {
-  
   app.register(fastifyMultipart, {
     limits: {
-      fileSize: 1_048_576 * 25, //100mb
+      fileSize: 1_048_576 * 100, //100mb
     },
   });
 
   app.post("/videos", async (request, replay) => {
     const data = await request.file();
+    console.log(data);
 
     if (!data) {
       return replay.status(400).send({ error: "Missing file input" });
     }
 
-    const extension = path.extname(data.fieldname);
+    const extension = path.extname(data.filename);
 
     if (extension !== ".mp3") {
       return replay
@@ -33,7 +34,7 @@ export async function uploadVideoRoute(app: FastifyInstance) {
 
     //examples.mp3
     //examples
-    const fileBaseName = path.basename(data.fieldname, "extension");
+    const fileBaseName = path.basename(data.filename, extension);
     const fileUploadName = `${fileBaseName}${randomUUID()}${extension}`;
 
     const upLoadDescription = path.resolve(
@@ -44,6 +45,15 @@ export async function uploadVideoRoute(app: FastifyInstance) {
 
     await pump(data.file, fs.createWriteStream(upLoadDescription));
 
-    return replay.send();
+    const video = await prisma.video.create({
+      data: {
+        name: data.filename,
+        path: upLoadDescription,
+      },
+    });
+
+    return {
+      video,
+    };
   });
 }
