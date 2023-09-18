@@ -1,11 +1,11 @@
 # @name get-prompts
 
-GET http://localhost:3334/prompts
+GET http://localhost:3333/prompts
 
 ###
 
 # @name upload
-POST  http://localhost:3334/videos
+POST  http://localhost:3333/videos
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -18,9 +18,21 @@ Content-Type: audio/mpeg
 ### 
 
 # @name create-trancription
-POST http://localhost:3334/videos/08bfd43e-ecb9-4903-b6d8-e93ffdcc1208/transcription
+POST http://localhost:3333/videos/24782005-61a6-439f-8b07-404a4f0f36ac/transcription
 Content-Type: application/json
 
 {
-  "prompt" : "Another Hero,behind the curtain"
+  "prompt" : "zé da manga"
+}
+
+### 
+
+# @name genarate-ai-completion
+POST http://localhost:3333/ai/complete
+Content-Type: application/json
+
+{
+  "videoID" : "24782005-61a6-439f-8b07-404a4f0f36ac",
+  "temperature" : "0.5",
+  "template":"Gere um resumo sucinto da tranquição do vídeo informada a seguir"
 }

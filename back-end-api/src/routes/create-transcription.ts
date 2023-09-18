@@ -1,11 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { createReadStream } from "fs";
 import { openai } from "../lib/openai";
+import { createReadStream } from "fs";
 
 export async function createdTranscriptionRoute(app: FastifyInstance) {
   app.post("/videos/:videoId/transcription", async (request, reply) => {
+    let transcription = "texto padrão ";
     const paramsSchema = z.object({
       videoId: z.string().uuid(),
     });
@@ -31,16 +32,20 @@ export async function createdTranscriptionRoute(app: FastifyInstance) {
     const videoPath = video.path;
     const audioReadStream = createReadStream(videoPath);
 
-    const response = await openai.audio.transcriptions.create({
-      file: audioReadStream,
-      model: "whisper-1",
-      language: "en",
-      response_format: "json",
-      temperature: 0,
-      prompt,
-    });
+    try {
+      const response = await openai.audio.transcriptions.create({
+        file: audioReadStream,
+        model: "whisper-1",
+        language: "en",
+        response_format: "json",
+        temperature: 0,
+        prompt,
+      });
 
-    const transcription = response.text;
+      transcription = response.text;
+    } catch (error) {
+      console.log("Não foi possível usar acessar transcrição", error);
+    }
 
     await prisma.video.update({
       where: {
